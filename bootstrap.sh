@@ -3,6 +3,8 @@
 HOME="/home/vagrant"
 BIN_DIR=$HOME"/bin"
 DOWNLOADS_DIR=$HOME"/downloads"
+SERVICE_DIR="/etc/systemd/system"
+SHARED_VAGRANT_DIR="/vagrant"
 
 # print user
 echo "provisioning as user:" $USER
@@ -36,14 +38,38 @@ wget -nv https://releases.hashicorp.com/vault/0.7.3/vault_0.7.3_linux_amd64.zip
 cd $BIN_DIR
 unzip $DOWNLOADS_DIR/vault_0.7.3_linux_amd64.zip
 
-# set vault server location environment
-export VAULT_ADDR='http://127.0.0.1:8200'
+# setup consul to run as a systemd service
+cd $SERVICE_DIR
+sudo cp $SHARED_VAGRANT_DIR/consul.service  consul.service
+sudo chmod 644 consul.service
+sudo systemctl daemon-reload
+echo "consul has been installed as a systemd service"
+
+# start consul service
+sudo systemctl start consul
+echo "consul systemd service started"
+
+# set consul service to run at startup
+sudo systemctl enable consul
+echo "consul systemd service set to run at startup"
+
+# setup vault server to run as a systemd service
+cd $SERVICE_DIR
+sudo cp $SHARED_VAGRANT_DIR/vault.service  vault.service
+sudo chmod 644 vault.service
+sudo systemctl daemon-reload
+echo "vault has been installed as a systemd service"
+
+# export vault server location environment variable to bash profile
+echo "export VAULT_ADDR='http://127.0.0.1:8200'" >>$HOME/.bash_profile
 
 # if an mlock error appears when starting vault, this is the command to allow linux mlock without running the vault process as root
 sudo setcap cap_ipc_lock=+ep $(readlink -f $(which vault))
 
-# command to start consul
-#nohup consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul -bind 127.0.0.1 &
+# start vault service
+sudo systemctl start vault
+echo "vault systemd service started"
 
-# command to start vault
-#nohup vault server -config=/vagrant/vault-config.hcl &
+# set vault service to run at startup
+sudo systemctl enable vault
+echo "vault systemd service set to run at startup"

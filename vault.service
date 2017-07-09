@@ -1,0 +1,12 @@
+[Unit]
+Description=Vault Service
+After=network.target
+
+[Service]
+Type=simple
+User=vagrant
+ExecStart=/home/vagrant/bin/vault server -config=/vagrant/vault-config.hcl
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

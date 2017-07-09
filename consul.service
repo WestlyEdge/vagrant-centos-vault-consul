@@ -1,0 +1,12 @@
+[Unit]
+Description=Consul Service
+After=network.target
+
+[Service]
+Type=simple
+User=vagrant
+ExecStart=/home/vagrant/bin/consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul -bind 127.0.0.1
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
